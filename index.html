@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Impara la Logica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;600;700&display=swap">
+<style>
+/* Layout: una colonna centrale "quaderno", mappa a livelli in griglia, laboratorio interruttori → lampadina.
+   Tema chiaro unico, scelto per studenti con DSA (sfondo non abbagliante, alto contrasto). */
+:root{
+  color-scheme: light;
+  --bg:#F3F1EA; --paper:#FFFDF8; --ink:#1E2833; --soft:#475262; --line:#DCD5C4;
+  --accent:#2457A6; --accent-soft:#E3ECF9;
+  --one:#1D56A8; --one-bg:#DCE8FA; --zero:#A84800; --zero-bg:#FCE3CF;
+  --vp:#0B7064; --vp-bg:#DDF0EC; --vq:#6B3FA8; --vq-bg:#ECE5F7; --vr:#A3245E;
+  --hl:#FFF2C2; --hl-line:#D9B84A; --lamp:#FFC83D; --lamp-off:#E4E0D5;
+  --ok:#1C6B4A; --ok-bg:#DDF1E6; --ko:#9A4100; --ko-bg:#FCE9DA;
+  --display:'Lexend', Verdana, sans-serif;
+  --body:'Atkinson Hyperlegible', Verdana, Tahoma, sans-serif;
+  --r:16px;
+}
+html{font-size:19px}
+html.big{font-size:23px}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;letter-spacing:.01em;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:900px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+.vp{color:var(--vp);font-weight:700}.vq{color:var(--vq);font-weight:700}.vr{color:var(--vr);font-weight:700}
+.n1{color:var(--one);font-weight:700}.n0{color:var(--zero);font-weight:700}
+
+/* barra in alto */
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;text-align:left}
+.brand .logo{display:flex;gap:4px}
+.brand .logo span{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:.95rem}
+.brand b{font-family:var(--display);font-size:1.25rem}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tool{background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:6px 16px;font-size:.9rem;font-weight:700}
+.tool[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+/* tessere 0 / 1 */
+.tile{display:inline-grid;place-items:center;width:2.2em;height:2.2em;border-radius:10px;font-family:var(--display);font-weight:700}
+.t1{background:var(--one-bg);color:var(--one)}.t0{background:var(--zero-bg);color:var(--zero)}
+.badge{display:inline-grid;place-items:center;width:2.4em;height:2.4em;border-radius:50%;font-family:var(--display);font-weight:700;flex:none}
+.bp{background:var(--vp-bg);color:var(--vp)}.bq{background:var(--vq-bg);color:var(--vq)}
+
+/* home */
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding-block:12px}
+.hero h1{font-size:2.6rem;font-weight:700}
+.hero p{font-size:1.1rem;color:var(--soft);max-width:34em;margin-top:10px}
+.legend{display:flex;flex-direction:column;gap:10px;background:var(--paper);border:2px solid var(--line);border-radius:var(--r);padding:16px 20px;font-size:.95rem}
+.legend div{display:flex;gap:10px;align-items:center}
+.legend .tile{width:1.9em;height:1.9em}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.lv{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;background:var(--paper);border:2px solid var(--line);border-radius:var(--r);padding:18px 20px;min-width:0}
+.lv:hover{border-color:var(--accent)}
+.lv .num{font-size:.85rem;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.lv h3{font-size:1.35rem}
+.lv .name{font-family:var(--display);font-weight:700;font-size:1.9rem;color:var(--accent)}
+.lv p{color:var(--soft);font-size:.95rem}
+.lv .state{margin-top:auto;font-size:.9rem;font-weight:700;padding:4px 12px;border-radius:999px;background:var(--bg)}
+.lv .state.done{background:var(--ok-bg);color:var(--ok)}
+.lv.final{background:var(--accent-soft);border-color:var(--accent)}
+.how{font-size:.95rem;color:var(--soft)}
+
+/* livello */
+.head{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:.85rem;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.head h2{font-size:1.9rem}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.steps span{font-size:.85rem;font-weight:700;padding:4px 12px;border-radius:999px;background:var(--paper);border:2px solid var(--line);color:var(--soft)}
+.steps span.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.steps span.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:var(--r);padding:22px 24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ex{display:flex;flex-direction:column;gap:10px}
+.ex .row{display:flex;gap:14px;align-items:center}
+.ex .quote{font-size:1.1rem}
+.rule{background:var(--accent-soft);border-radius:12px;padding:16px 20px;font-size:1.1rem}
+.trick{display:flex;gap:14px;align-items:flex-start;background:var(--hl);border-radius:12px;padding:14px 18px}
+.trick svg{flex:none;width:30px;height:30px}
+
+/* laboratorio */
+.lab{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:center;padding-block:8px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;padding:6px}
+.sw .tile{width:96px;height:96px;font-size:3rem;border-radius:18px;border:3px solid transparent;transition:transform .15s}
+.sw:active .tile{transform:scale(.95)}
+.sw small{font-size:.85rem;color:var(--soft)}
+.op{font-family:var(--display);font-weight:700;font-size:1.6rem;color:var(--accent);background:var(--accent-soft);padding:10px 18px;border-radius:12px}
+.eq{font-family:var(--display);font-size:2rem;font-weight:700}
+.lampbox{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
+.lamp{width:110px;height:110px;border-radius:50%;background:var(--lamp-off);border:4px solid #B9B2A2;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:2.4rem;color:var(--zero);transition:background .25s, box-shadow .25s}
+.lamp.on{background:radial-gradient(circle at 50% 40%,#FFF8D6,var(--lamp));border-color:#D9A21A;color:var(--one);box-shadow:0 0 36px 8px rgba(255,200,61,.55)}
+.lampbox b{font-size:.95rem}
+
+/* tabelle */
+.tw{overflow-x:auto}
+table.tt{border-collapse:collapse;font-family:var(--display);font-size:1.3rem;margin-inline:auto;font-variant-numeric:tabular-nums}
+.tt th,.tt td{border:2px solid var(--line);padding:8px 22px;text-align:center;min-width:3.2em}
+.tt th{font-size:1rem;background:var(--bg)}
+.tt tr.cur{background:var(--hl);outline:3px solid var(--hl-line);outline-offset:-3px}
+.tt td.unk{color:#9A927F}
+.cell{width:2.4em;height:2.1em;border-radius:10px;border:2px dashed #A79F8C;background:var(--paper);font-family:var(--display);font-weight:700;font-size:1.2rem}
+.cell.v1{background:var(--one-bg);color:var(--one);border-style:solid;border-color:var(--one)}
+.cell.v0{background:var(--zero-bg);color:var(--zero);border-style:solid;border-color:var(--zero)}
+.cell.bad{outline:4px solid var(--ko);outline-offset:2px}
+.tt.build{font-size:1.15rem}
+.tt.build th,.tt.build td{padding:6px 12px}
+.tt.build th.bh{font-size:.85rem;max-width:9em;line-height:1.3}
+.tt.build th.now{background:var(--hl);outline:3px solid var(--hl-line);outline-offset:-3px}
+.tt.build th.later{color:#9A927F}
+.tt.build .cell{width:2.2em;height:1.9em}
+.cn{color:var(--accent)}
+.counter{font-size:.95rem;color:var(--soft);text-align:center}
+
+/* domande */
+.qnum{font-size:.85rem;font-weight:700;color:var(--soft);letter-spacing:.06em;text-transform:uppercase}
+.qtext{font-size:1.45rem;font-weight:600}
+.qsub{font-size:1.05rem;color:var(--soft)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.opt{background:var(--paper);border:3px solid var(--line);border-radius:14px;padding:16px;font-family:var(--display);font-weight:700;font-size:1.35rem;display:flex;align-items:center;justify-content:center;gap:10px;min-height:72px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.opt.wrong{border-color:var(--ko);background:var(--ko-bg);color:var(--ko);opacity:.85}
+.opt:disabled{cursor:default}
+.fb{border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px;font-size:1.05rem}
+.fb.ok{background:var(--ok-bg);border:2px solid var(--ok)}
+.fb.ko{background:var(--ko-bg);border:2px solid var(--ko)}
+.fb strong{font-family:var(--display);font-size:1.15rem}
+.fb.ok strong{color:var(--ok)}.fb.ko strong{color:var(--ko)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{background:var(--accent);color:#FFFDF8;border:0;border-radius:12px;padding:12px 24px;font-family:var(--display);font-weight:700;font-size:1.05rem}
+.btn.ghost{background:var(--paper);color:var(--accent);border:2px solid var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.mini{border-collapse:collapse;font-family:var(--display);font-size:1.05rem;margin-top:6px}
+.mini th,.mini td{border:2px solid var(--line);padding:4px 16px;text-align:center}
+.mini th{background:var(--bg);font-size:.9rem}
+
+/* fine livello */
+.end{align-items:center;text-align:center;padding-block:36px}
+.stars{display:flex;gap:10px}
+.stars svg{width:56px;height:56px}
+.end h2{font-size:2rem}
+
+@media (max-width:620px){
+  html{font-size:17px} html.big{font-size:20px}
+  .hero{grid-template-columns:1fr}
+  .hero h1{font-size:2.1rem}
+  .sw .tile{width:78px;height:78px;font-size:2.4rem}
+  .lamp{width:90px;height:90px}
+  .tt th,.tt td{padding:6px 12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+const BULB='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="none" stroke="#8A6100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const STAR=(on)=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z" fill="${on?'#F2B705':'#E4E0D5'}" stroke="${on?'#B98700':'#B9B2A2'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+
+/* ---------- contenuti ---------- */
+const C={
+ and:{name:'AND',legge:'e',full:'la congiunzione',two:true,f:(p,q)=>p&q,
+  regola:'p AND q vale 1 solo se p e q valgono entrambe 1. In tutti gli altri casi vale 0.',
+  trucco:'Due interruttori in fila: la lampadina si accende solo se li accendi tutti e due.',
+  p:'Ho fatto i compiti.',q:'Ho sistemato la camera.',frase:'Ho fatto i compiti <b>e</b> ho sistemato la camera.',uni:1},
+ or:{name:'OR',legge:'o',full:'la disgiunzione inclusiva',two:true,f:(p,q)=>p|q,
+  regola:'p OR q vale 1 se almeno una tra p e q vale 1. Vale 0 solo se sono entrambe 0.',
+  trucco:'Per OR basta un 1 per avere 1.',
+  p:'Vado in palestra il lunedì.',q:'Vado in palestra il giovedì.',frase:'Vado in palestra il lunedì <b>o</b> il giovedì (anche tutti e due).',uni:3},
+ xor:{name:'XOR',legge:'o… o…',full:'la disgiunzione esclusiva',two:true,f:(p,q)=>p^q,
+  regola:'p XOR q vale 1 se una sola tra p e q vale 1. Vale 0 se sono uguali.',
+  trucco:'XOR chiede: «sono diversi?». Diversi → 1. Uguali → 0.',
+  p:'Come dessert prendo il gelato.',q:'Come dessert prendo la frutta.',frase:'<b>O</b> prendo il gelato <b>o</b> la frutta: uno solo.',uni:2},
+ not:{name:'NOT',legge:'non',full:'la negazione',two:false,f:(p)=>1-p,
+  regola:'NOT p cambia il valore: se p vale 1, NOT p vale 0. Se p vale 0, NOT p vale 1.',
+  trucco:'Come girare una carta: si vede sempre l\'altro lato.',
+  p:'Oggi piove.',q:'',frase:'Oggi <b>non</b> piove.',uni:1}
+};
+const PROP=[
+ {t:'Roma è la capitale d\'Italia.',ok:true,v:1},
+ {t:'Chiudi la porta!',ok:false,why:'È un ordine: non ha senso chiedersi se è vero o falso.'},
+ {t:'Il 9 è un numero pari.',ok:true,v:0},
+ {t:'Che ore sono?',ok:false,why:'È una domanda: non è né vera né falsa.'},
+ {t:'La pizza è il cibo più buono del mondo.',ok:false,why:'Dipende dai gusti: non si può decidere per tutti.'},
+ {t:'Un triangolo ha quattro lati.',ok:true,v:0},
+ {t:'L\'acqua è formata da idrogeno e ossigeno.',ok:true,v:1},
+ {t:'Il film di ieri sera era noioso.',ok:false,why:'È un\'opinione: per qualcuno era noioso, per altri no.'}
+];
+const SIT=[
+ {t:'Per entrare al concerto servono il biglietto e un documento.',k:'and'},
+ {t:'Vinci il premio se indovini il numero e il colore.',k:'and'},
+ {t:'Puoi pagare in contanti o con la carta: vanno bene tutti e due i modi.',k:'or'},
+ {t:'Ti chiamo o ti scrivo un messaggio, magari tutte e due le cose.',k:'or'},
+ {t:'Il menù comprende o il dolce o la frutta: uno solo.',k:'xor'},
+ {t:'La moneta cade su testa o su croce.',k:'xor'},
+ {t:'Oggi la palestra non è aperta.',k:'not'},
+ {t:'Marco non ha portato il telefono.',k:'not'}
+];
+const SITWHY={and:'Servono tutte e due le condizioni insieme: è AND.',or:'Va bene una, l\'altra o tutte e due: è OR.',xor:'Ne succede una sola, mai tutte e due: è XOR.',not:'La parola «non» cambia il valore: è NOT.'};
+const LV=[
+ {id:'prop',t:'Le proposizioni',d:'Frasi vere (1) o false (0)?'},
+ {id:'and',t:'La congiunzione',d:'Si legge «e»'},
+ {id:'or',t:'La disgiunzione',d:'Si legge «o»'},
+ {id:'xor',t:'L\'esclusiva',d:'Si legge «o… o…»'},
+ {id:'not',t:'La negazione',d:'Si legge «non»'},
+ {id:'tab2',t:'Tavole a 2 lettere',d:'Costruisci 4 tavole con p e q, una colonna alla volta',big:'p · q'},
+ {id:'tab3',t:'Tavole a 3 lettere',d:'Prepara le 8 righe e costruisci 3 tavole con p, q e r',big:'p · q · r'},
+ {id:'sfida',t:'Sfida finale',d:'10 domande miste, senza tempo'}
+];
+
+/* ---------- costruttore di tavole ---------- */
+const H={not:x=>`Scrivi il contrario della colonna ${x}.`,
+ and:(a,b)=>`Metti 1 solo dove ${a} e ${b} valgono entrambe 1. Altrove 0.`,
+ or:(a,b)=>`Metti 1 dove almeno una tra ${a} e ${b} vale 1. Metti 0 solo dove sono entrambe 0.`,
+ xor:(a,b)=>`Metti 1 dove ${a} e ${b} sono diverse. Dove sono uguali metti 0.`};
+const T2=[
+ {e:'NOT p OR q',cols:[{h:'NOT p',f:o=>1-o.p,hint:H.not('p')},{h:'NOT p OR q',f:o=>(1-o.p)|o.q,hint:H.or('NOT p','q')}]},
+ {e:'p AND NOT q',cols:[{h:'NOT q',f:o=>1-o.q,hint:H.not('q')},{h:'p AND NOT q',f:o=>o.p&(1-o.q),hint:H.and('p','NOT q')}]},
+ {e:'NOT (p AND q)',cols:[{h:'p AND q',f:o=>o.p&o.q,hint:H.and('p','q')},{h:'NOT (p AND q)',f:o=>1-(o.p&o.q),hint:H.not('p AND q')}],note:'È uguale a NOT p OR NOT q: è la prima legge di De Morgan.'},
+ {e:'NOT (p OR q)',cols:[{h:'p OR q',f:o=>o.p|o.q,hint:H.or('p','q')},{h:'NOT (p OR q)',f:o=>1-(o.p|o.q),hint:H.not('p OR q')}],note:'È uguale a NOT p AND NOT q: è la seconda legge di De Morgan.'},
+ {e:'p AND (p OR q)',cols:[{h:'p OR q',f:o=>o.p|o.q,hint:H.or('p','q')},{h:'p AND (p OR q)',f:o=>o.p&(o.p|o.q),hint:H.and('p','p OR q')}],note:'Il risultato è uguale alla colonna p: le due proposizioni sono equivalenti.'},
+ {e:'(p OR q) AND NOT (p AND q)',cols:[{h:'p OR q',f:o=>o.p|o.q,hint:H.or('p','q')},{h:'p AND q',f:o=>o.p&o.q,hint:H.and('p','q')},{h:'NOT (p AND q)',f:o=>1-(o.p&o.q),hint:H.not('p AND q')},{h:'(p OR q) AND NOT (p AND q)',f:o=>(o.p|o.q)&(1-(o.p&o.q)),hint:H.and('p OR q','NOT (p AND q)')}],note:'Il risultato è uguale a p XOR q!'},
+ {e:'NOT p AND NOT q',cols:[{h:'NOT p',f:o=>1-o.p,hint:H.not('p')},{h:'NOT q',f:o=>1-o.q,hint:H.not('q')},{h:'NOT p AND NOT q',f:o=>(1-o.p)&(1-o.q),hint:H.and('NOT p','NOT q')}],note:'È uguale a NOT (p OR q).'}
+];
+const T3PREP={e:'Prepara la tabella',prep:true,inputs:['p'],
+ intro:'Con 3 lettere le righe sono 8. La colonna p è già pronta: 4 zeri e poi 4 uni.',
+ cols:[{h:'q',f:o=>o.q,hint:'Colonna q: 2 zeri, 2 uni, poi di nuovo 2 zeri e 2 uni.'},{h:'r',f:o=>o.r,hint:'Colonna r: 0 e 1 alternati, uno alla volta: 0, 1, 0, 1…'}]};
+const T3=[
+ {e:'(p AND q) OR r',cols:[{h:'p AND q',f:o=>o.p&o.q,hint:H.and('p','q')},{h:'(p AND q) OR r',f:o=>(o.p&o.q)|o.r,hint:H.or('p AND q','r')}]},
+ {e:'p AND (q OR r)',cols:[{h:'q OR r',f:o=>o.q|o.r,hint:H.or('q','r')},{h:'p AND (q OR r)',f:o=>o.p&(o.q|o.r),hint:H.and('p','q OR r')}]},
+ {e:'p OR (q AND r)',cols:[{h:'q AND r',f:o=>o.q&o.r,hint:H.and('q','r')},{h:'p OR (q AND r)',f:o=>o.p|(o.q&o.r),hint:H.or('p','q AND r')}]},
+ {e:'(p OR q) AND NOT r',cols:[{h:'p OR q',f:o=>o.p|o.q,hint:H.or('p','q')},{h:'NOT r',f:o=>1-o.r,hint:H.not('r')},{h:'(p OR q) AND NOT r',f:o=>(o.p|o.q)&(1-o.r),hint:H.and('p OR q','NOT r')}]},
+ {e:'NOT p AND (q OR r)',cols:[{h:'NOT p',f:o=>1-o.p,hint:H.not('p')},{h:'q OR r',f:o=>o.q|o.r,hint:H.or('q','r')},{h:'NOT p AND (q OR r)',f:o=>(1-o.p)&(o.q|o.r),hint:H.and('NOT p','q OR r')}]},
+ {e:'(p XOR q) AND r',cols:[{h:'p XOR q',f:o=>o.p^o.q,hint:H.xor('p','q')},{h:'(p XOR q) AND r',f:o=>(o.p^o.q)&o.r,hint:H.and('p XOR q','r')}]}
+];
+const ROWS2=[[0,0],[0,1],[1,0],[1,1]].map(([p,q])=>({p,q}));
+const ROWS3=[];for(let p=0;p<2;p++)for(let q=0;q<2;q++)for(let r=0;r<2;r++)ROWS3.push({p,q,r});
+const NUMS=['①','②','③','④'];
+function getRound(ref){return ref.pool==='prep'?T3PREP:(ref.pool==='T2'?T2:T3)[ref.i]}
+
+/* ---------- utilità ---------- */
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const col=s=>s.replace(/\b([pqr])\b/g,m=>`<span class="v${m}">${m}</span>`);
+const tile=v=>`<span class="tile t${v}">${v}</span>`;
+const rowsFor=k=>C[k].two?[[0,0],[0,1],[1,0],[1,1]]:[[0],[1]];
+const res=(k,r)=>C[k].two?C[k].f(r[0],r[1]):C[k].f(r[0]);
+const store={get(){try{return JSON.parse(localStorage.getItem('missione-logica-v1')||'{}')}catch(e){return{}}},set(v){try{localStorage.setItem('missione-logica-v1',JSON.stringify(v))}catch(e){}}};
+
+let S;
+function save(){store.set({done:S.done,big:S.big})}
+
+/* ---------- generatori di domande ---------- */
+function binOpts(){return [{h:tile(0)+' falso',v:0},{h:tile(1)+' vero',v:1}]}
+function calcQ(k,p,q){
+ const c=C[k], r=c.two?c.f(p,q):c.f(p);
+ return {text:c.two?col(`Se p = ${p} e q = ${q}, quanto vale p ${c.name} q?`):col(`Se p = ${p}, quanto vale NOT p?`),
+  opts:binOpts(),ans:r,hint:col(c.regola),
+  explain:col(`${c.regola} Qui p = ${p}${c.two?` e q = ${q}`:''}, quindi il risultato è ${r}.`)};
+}
+function sitQ(s){
+ return {text:`“${s.t}”`,sub:'Quale connettivo c\'è in questa frase?',
+  opts:['and','or','xor','not'].map(k=>({h:C[k].name,v:k})),ans:s.k,
+  hint:'AND: servono tutte e due. OR: basta una. XOR: una sola. NOT: c\'è «non».',explain:SITWHY[s.k]};
+}
+function whichQ(k){
+ const rows=rowsFor(k);
+ const t=`<div class="tw"><table class="mini"><tr><th class="vp">p</th><th class="vq">q</th><th>risultato</th></tr>${rows.map(r=>`<tr><td class="n${r[0]}">${r[0]}</td><td class="n${r[1]}">${r[1]}</td><td class="n${res(k,r)}">${res(k,r)}</td></tr>`).join('')}</table></div>`;
+ return {text:'Quale connettivo dà questa tabella?',extra:t,opts:['and','or','xor'].map(x=>({h:C[x].name,v:x})),ans:k,
+  hint:'Conta quante volte il risultato è 1. AND: una volta. XOR: due volte. OR: tre volte.',
+  explain:`Il risultato vale 1 in ${C[k].uni} ${C[k].uni===1?'riga':'righe'}: è ${C[k].name}.`};
+}
+function prioQ(){
+ const p=rnd([0,1]),q=rnd([0,1]),r=rnd([0,1]);
+ if(Math.random()<.5){
+  const a=p&q,out=a|r;
+  return {text:col(`Se p = ${p}, q = ${q}, r = ${r}: quanto vale p AND q OR r?`),opts:binOpts(),ans:out,
+   hint:'Prima AND, poi OR (come prima × e poi +).',
+   explain:col(`Prima AND: p AND q = ${a}. Poi OR con r: ${a} OR ${r} = ${out}.`)};
+ }
+ const b=q|r,out=p&b;
+ return {text:col(`Se p = ${p}, q = ${q}, r = ${r}: quanto vale p AND (q OR r)?`),opts:binOpts(),ans:out,
+  hint:'Prima la parentesi, poi il resto.',
+  explain:col(`Prima la parentesi: q OR r = ${b}. Poi AND con p: ${p} AND ${b} = ${out}.`)};
+}
+function propQ(it){
+ return {text:`“${it.t}”`,sub:'È una proposizione?',opts:[{h:'Sì',v:true},{h:'No',v:false}],ans:it.ok,
+  hint:'Una proposizione è una frase che è sicuramente vera o sicuramente falsa, per tutti.',
+  explain:it.ok?'Sì: possiamo dire con certezza se è vera o falsa.':'No. '+it.why,
+  follow:it.ok?{text:`“${it.t}”`,sub:'Vale 1 (vera) o 0 (falsa)?',opts:binOpts(),ans:it.v,
+   hint:'Pensa a che cosa sai di questo argomento.',explain:it.v?'È vera, quindi vale 1.':'È falsa, quindi vale 0.'}:null};
+}
+function combos(k,n){return shuffle(rowsFor(k)).slice(0,n)}
+
+/* ---------- avvio livelli ---------- */
+function startLevel(id){
+ S.screen='level';S.lvl=id;S.err=0;S.answered=null;S.wrong=[];S.showHint=false;
+ if(id==='prop'){S.stage='quiz';S.qs=shuffle(PROP).map(propQ);S.qi=0}
+ else if(id==='tab2'||id==='tab3'){
+  const pool=id==='tab2'?'T2':'T3', n=id==='tab2'?4:3;
+  S.rounds=shuffle([...(pool==='T2'?T2:T3).keys()]).slice(0,n).map(i=>({pool,i}));
+  if(id==='tab3')S.rounds.unshift({pool:'prep'});
+  S.ri=0;S.stage='build';startRound();return;
+ }
+ else if(id==='sfida'){
+  const qs=[];
+  ['and','or','xor','not'].forEach(()=>{});
+  for(let i=0;i<3;i++){const k=rnd(['and','or','xor','not']);qs.push(calcQ(k,rnd([0,1]),rnd([0,1])))}
+  shuffle(['and','or','xor']).slice(0,2).forEach(k=>qs.push(whichQ(k)));
+  shuffle(SIT).slice(0,2).forEach(s=>qs.push(sitQ(s)));
+  qs.push(prioQ(),prioQ());
+  qs.push(propQ(rnd(PROP)));
+  S.stage='quiz';S.qs=shuffle(qs);S.qi=0;
+ } else {
+  S.stage='lab';S.lab={p:0,q:0,seen:{}};S.lab.seen[key(id,[0,0])]=1;S.labAsk=null;
+ }
+ render();window.scrollTo(0,0);
+}
+function startRound(){
+ const R=getRound(S.rounds[S.ri]), rows=S.lvl==='tab2'?ROWS2:ROWS3;
+ S.ci=0;S.vals=R.cols.map(()=>rows.map(()=>null));S.bad=[];S.showHint=false;S.roundOk=false;
+ render();window.scrollTo(0,0);
+}
+function buildView(){
+ const R=getRound(S.rounds[S.ri]), rows=S.lvl==='tab2'?ROWS2:ROWS3;
+ const inputs=R.inputs||(S.lvl==='tab2'?['p','q']:['p','q','r']);
+ const cur=R.cols[S.ci], last=R.cols.length-1;
+ const th=(c,j)=>{const st=S.roundOk||j<S.ci?'done':j===S.ci?'now':'later';
+  return `<th class="bh ${st}">${R.prep?'':`<span class="cn">${NUMS[j]}</span> `}${col(c.h)}</th>`};
+ const body=rows.map((o,i)=>{
+  const hl=S.roundOk&&!R.prep&&R.cols[last].f(o)===1;
+  return `<tr class="${hl?'cur':''}">${inputs.map(v=>`<td class="n${o[v]}">${o[v]}</td>`).join('')}${R.cols.map((c,j)=>{
+   if(S.roundOk||j<S.ci){const v=c.f(o);return `<td class="n${v}">${v}</td>`}
+   if(j>S.ci)return '<td class="unk">·</td>';
+   const v=S.vals[j][i];
+   return `<td><button class="cell ${v===null?'':'v'+v} ${S.bad.includes(i)?'bad':''}" data-a="bcell" data-i="${i}" aria-label="Riga ${i+1}: ${v===null?'vuota':v}${S.bad.includes(i)?', da rivedere':''}">${v===null?'?':v}</button></td>`}).join('')}</tr>`}).join('');
+ const total=S.rounds.length;
+ return `<div class="card" data-read>
+  <p class="qnum">Tabella ${S.ri+1} di ${total}</p>
+  <p class="qtext">${R.prep?R.e:col(R.e)}</p>
+  <p class="qsub">${R.intro?R.intro+' ':''}${S.roundOk?'':`Ora completa la colonna ${R.prep?col(cur.h):NUMS[S.ci]+' '+col(cur.h)}. Tocca le caselle per scegliere 0 o 1.`}</p>
+  <div class="tw"><table class="tt build"><tr>${inputs.map(v=>`<th class="v${v}">${v}</th>`).join('')}${R.cols.map(th).join('')}</tr>${body}</table></div>
+  ${S.roundOk?`<div class="fb ok"><strong>${R.prep?'Tabella pronta!':'Tavola completata!'}</strong>
+    <p>${R.prep?'Queste 8 righe contengono tutte le combinazioni possibili di p, q e r.':'Le righe gialle sono quelle in cui il risultato vale 1.'}${R.note?' <b>Curiosità:</b> '+col(R.note):''}</p>
+    <div class="actions"><button class="btn" data-a="bnext">${S.ri+1<total?'Tabella successiva':'Fine del livello'}</button></div></div>`:
+  `${S.showHint?`<div class="trick">${BULB}<p>${col(cur.hint)}</p></div>`:''}
+   ${S.bad.length?`<div class="fb ko"><strong>${S.bad.length===1?'Una casella':S.bad.length+' caselle'} da rivedere.</strong><p>Le caselle con il bordo spesso non sono giuste. Cambiale e controlla di nuovo.</p></div>`:''}
+   <div class="actions"><button class="btn" data-a="bcheck" ${S.vals[S.ci].includes(null)?'disabled':''}>Controlla la colonna</button>${S.showHint?'':'<button class="btn ghost" data-a="hint">Aiuto</button>'}</div>`}
+ </div>`;
+}
+function key(k,r){return C[k]&&C[k].two?r.join(''):String(r[0])}
+function startFill(){S.stage='fill';S.fill=rowsFor(S.lvl).map(()=>null);S.bad=[];S.fillOk=false;S.showHint=false;render()}
+function startQuiz(){
+ const k=S.lvl, qs=combos(k,2).map(r=>calcQ(k,r[0],r[1]===undefined?0:r[1]));
+ qs.push(sitQ(rnd(SIT.filter(s=>s.k===k))));
+ if(C[k].two) qs.push(whichQ(k));
+ S.stage='quiz';S.qs=qs;S.qi=0;S.answered=null;S.wrong=[];S.showHint=false;render();
+}
+function finish(){
+ const stars=S.err===0?3:S.err<=2?2:1;
+ S.done[S.lvl]=Math.max(S.done[S.lvl]||0,stars);save();
+ S.stage='end';S.stars=stars;render();window.scrollTo(0,0);
+}
+
+/* ---------- render ---------- */
+function topbar(){
+ const canSpeak='speechSynthesis' in window;
+ return `<header class="top">
+  <button class="brand" data-a="home" aria-label="Torna alla mappa dei livelli"><span class="logo"><span class="t1">1</span><span class="t0">0</span></span><b>Missione Logica</b></button>
+  <div class="tools">
+   ${canSpeak&&S.screen==='level'?'<button class="tool" data-a="speak">Ascolta</button>':''}
+   <button class="tool" data-a="big" aria-pressed="${S.big}">A+ Testo grande</button>
+   ${S.screen==='level'?'<button class="tool" data-a="home">Mappa</button>':''}
+  </div></header>`;
+}
+function home(){
+ const total=Object.values(S.done).reduce((a,b)=>a+b,0);
+ return `${topbar()}
+ <section class="hero">
+  <div><h1>Accendi la lampadina con la logica</h1>
+  <p>Impara da solo le proposizioni e i connettivi AND, OR, XOR e NOT. Per ogni connettivo: scopri, completa la tabella, rispondi. Poi costruisci tavole di verità con 2 e 3 lettere. Nessun limite di tempo.</p></div>
+  <div class="legend" aria-label="Legenda">
+   <div>${tile(1)} <span><b>1</b> = vero</span></div>
+   <div>${tile(0)} <span><b>0</b> = falso</span></div>
+   <div><span class="badge bp">p</span><span class="badge bq">q</span> <span>sempre questi colori</span></div>
+  </div>
+ </section>
+ <div class="map">
+ ${LV.map((l,i)=>{const st=S.done[l.id];const nm=C[l.id]?C[l.id].name:'';
+  return `<button class="lv ${l.id==='sfida'?'final':''}" data-a="go" data-id="${l.id}">
+   <span class="num">Livello ${i+1}</span>
+   ${nm||l.big?`<span class="name">${nm||col(l.big)}</span>`:''}<h3>${l.t}</h3><p>${l.d}</p>
+   <span class="state ${st?'done':''}">${st?`Completato · ${'★'.repeat(st)}${'☆'.repeat(3-st)}`:'Da fare'}</span></button>`}).join('')}
+ </div>
+ <p class="how">Stelle raccolte: <b>${total}</b> su ${LV.length*3}. I progressi restano salvati su questo dispositivo. ${total?(S.confirmReset?'<span>Vuoi davvero cancellarli? <button class="tool" data-a="reset2">Sì, cancella</button> <button class="tool" data-a="reset0">No</button></span>':'<button class="tool" data-a="reset">Ricomincia da capo</button>'):''}</p>`;
+}
+function levelHead(){
+ const l=LV.find(x=>x.id===S.lvl), i=LV.indexOf(l)+1, c=C[S.lvl];
+ let st=c?['lab','fill','quiz']:['quiz'];const names={lab:'1 · Scopri',fill:'2 · Completa',quiz:c?'3 · Rispondi':'Rispondi'};
+ let idx=st.indexOf(S.stage);
+ if(S.stage==='build'){st=S.rounds.map((r,j)=>'b'+j);S.rounds.forEach((r,j)=>names['b'+j]=r.pool==='prep'?'Prepara':'Tabella '+(j+1));idx=S.ri}
+ return `<div class="head"><span class="eyebrow">Livello ${i}${c?' · '+c.full:''}</span>
+  <h2>${c?c.name+': si legge «'+c.legge+'»':l.t}</h2>
+  ${S.stage!=='end'?`<div class="steps">${st.map((s,j)=>`<span class="${j<idx?'ok':j===idx?'on':''}">${j<idx?'✓ ':''}${names[s]}</span>`).join('')}</div>`:''}</div>`;
+}
+function labView(){
+ const k=S.lvl,c=C[k],L=S.lab,rows=rowsFor(k);
+ const cur=c.two?[L.p,L.q]:[L.p], out=res(k,cur), all=rows.every(r=>L.seen[key(k,r)]);
+ const seenN=rows.filter(r=>L.seen[key(k,r)]).length;
+ return `<div class="card" data-read>
+  <div class="ex">
+   <div class="row"><span class="badge bp">p</span><span class="quote">“${c.p}”</span></div>
+   ${c.two?`<div class="row"><span class="badge bq">q</span><span class="quote">“${c.q}”</span></div>`:''}
+   <div class="rule"><b>${col(c.two?'p '+c.name+' q':'NOT p')}</b>: “${c.frase}”</div>
+  </div>
+ </div>
+ <div class="card">
+  <h3>Il laboratorio</h3>
+  <p>Tocca gli interruttori e guarda la lampadina. Prova <b>tutte le combinazioni</b>.</p>
+  <div class="lab">
+   <button class="sw" data-a="tog" data-v="p" aria-label="Interruttore p, vale ${L.p}. Tocca per cambiare"><span class="badge bp">p</span><span class="tile t${L.p}">${L.p}</span><small>tocca</small></button>
+   ${c.two?`<span class="op">${c.name}</span>
+   <button class="sw" data-a="tog" data-v="q" aria-label="Interruttore q, vale ${L.q}. Tocca per cambiare"><span class="badge bq">q</span><span class="tile t${L.q}">${L.q}</span><small>tocca</small></button>`:`<span class="op" style="order:-1">NOT</span>`}
+   <span class="eq">=</span>
+   <div class="lampbox" aria-live="polite"><div class="lamp ${out?'on':''}">${out}</div><b>${out?'Accesa: vale 1':'Spenta: vale 0'}</b></div>
+  </div>
+  <div class="tw"><table class="tt" aria-label="Tavola di verità che si scopre provando">
+   <tr><th class="vp">p</th>${c.two?'<th class="vq">q</th>':''}<th>${c.two?'p '+c.name+' q':'NOT p'}</th></tr>
+   ${rows.map(r=>{const s=L.seen[key(k,r)],isCur=key(k,r)===key(k,cur),v=res(k,r);
+    return `<tr class="${isCur?'cur':''}">${r.map(x=>`<td class="n${x}">${x}</td>`).join('')}<td class="${s?'n'+v:'unk'}">${s?v:'?'}</td></tr>`}).join('')}
+  </table></div>
+  <p class="counter">Combinazioni provate: <b>${seenN} su ${rows.length}</b>. La riga gialla è quella che stai provando.</p>
+ </div>
+ ${all?labQuestion(rows):''}`;
+}
+function labQuestion(rows){
+ const k=S.lvl,c=C[k];
+ const opts=[...Array(rows.length+1).keys()];
+ const done=S.labAsk==='ok';
+ return `<div class="card">
+  <p class="qtext">In quante righe la lampadina è accesa?</p>
+  <div class="opts">${opts.map(n=>`<button class="opt ${S.labAsk===n?'wrong':''} ${done&&n===c.uni?'right':''}" data-a="labans" data-n="${n}" ${done||S.labAsk===n?'disabled':''}>${n}</button>`).join('')}</div>
+  ${done?`<div class="fb ok"><strong>Giusto!</strong><p>${col(c.regola)}</p><div class="trick">${BULB}<p><b>Trucco:</b> ${c.trucco}</p></div>
+   <div class="actions"><button class="btn" data-a="tofill">Avanti: completa la tabella</button></div></div>`:
+   (typeof S.labAsk==='number'?`<div class="fb ko"><strong>Non ancora.</strong><p>Guarda la colonna del risultato e conta gli <span class="n1">1</span>.</p></div>`:'')}
+ </div>`;
+}
+function fillView(){
+ const k=S.lvl,c=C[k],rows=rowsFor(k);
+ return `<div class="card" data-read>
+  <p class="qtext">Completa la tavola di ${col(c.two?'p '+c.name+' q':'NOT p')}</p>
+  <p class="qsub">Tocca ogni casella per scegliere <span class="n0">0</span> o <span class="n1">1</span>. Non serve scrivere.</p>
+  <div class="tw"><table class="tt">
+   <tr><th class="vp">p</th>${c.two?'<th class="vq">q</th>':''}<th>${c.two?'p '+c.name+' q':'NOT p'}</th></tr>
+   ${rows.map((r,i)=>{const v=S.fill[i];return `<tr>${r.map(x=>`<td class="n${x}">${x}</td>`).join('')}<td><button class="cell ${v===null?'':'v'+v} ${S.bad.includes(i)?'bad':''}" data-a="cell" data-i="${i}" aria-label="Riga ${i+1}: ${v===null?'vuota':v}${S.bad.includes(i)?', da rivedere':''}" ${S.fillOk?'disabled':''}>${v===null?'?':v}</button></td></tr>`}).join('')}
+  </table></div>
+  ${S.showHint?`<div class="trick">${BULB}<p>${col(c.regola)}</p></div>`:''}
+  ${S.fillOk?`<div class="fb ok"><strong>Tabella perfetta!</strong><p>Hai costruito da solo la tavola di verità di ${c.name}.</p><div class="actions"><button class="btn" data-a="toquiz">Avanti: rispondi alle domande</button></div></div>`:
+   `${S.bad.length?`<div class="fb ko"><strong>${S.bad.length===1?'Una casella':S.bad.length+' caselle'} da rivedere.</strong><p>Le caselle con il bordo spesso non sono giuste. Cambiale e controlla di nuovo.</p></div>`:''}
+   <div class="actions"><button class="btn" data-a="check" ${S.fill.includes(null)?'disabled':''}>Controlla</button>${S.showHint?'':'<button class="btn ghost" data-a="hint">Aiuto</button>'}</div>`}
+ </div>`;
+}
+function quizView(){
+ const q=S.qs[S.qi], done=S.answered!==null;
+ return `<div class="card" data-read>
+  <p class="qnum">Domanda ${S.qi+1} di ${S.qs.length}</p>
+  <p class="qtext">${q.text}</p>
+  ${q.sub?`<p class="qsub">${q.sub}</p>`:''}
+  ${q.extra||''}
+ </div>
+ <div class="opts">${q.opts.map((o,i)=>{const isR=done&&o.v===q.ans,isW=S.wrong.includes(i);
+  return `<button class="opt ${isR?'right':''} ${isW?'wrong':''}" data-a="pick" data-i="${i}" ${done||isW?'disabled':''}>${o.h}</button>`}).join('')}</div>
+ ${done?`<div class="fb ok"><strong>Giusto!</strong><p>${q.explain}</p><div class="actions"><button class="btn" data-a="next">${S.qi+1<S.qs.length?'Domanda successiva':'Fine del livello'}</button></div></div>`:
+  (S.wrong.length?`<div class="fb ko"><strong>Non ancora, riprova.</strong><p>${q.hint}</p></div>`:
+   `<div class="actions">${S.showHint?`<div class="trick">${BULB}<p>${q.hint}</p></div>`:'<button class="btn ghost" data-a="hint">Aiuto</button>'}</div>`)}`;
+}
+function endView(){
+ const i=LV.findIndex(l=>l.id===S.lvl), next=LV[i+1];
+ const msg=S.stars===3?'Perfetto, nessun errore!':S.stars===2?'Ottimo lavoro!':'Livello completato. Puoi rigiocarlo per prendere più stelle.';
+ return `<div class="card end">
+  <div class="stars" aria-label="${S.stars} stelle su 3">${[1,2,3].map(n=>STAR(n<=S.stars)).join('')}</div>
+  <h2>${msg}</h2>
+  ${C[S.lvl]?`<div class="rule">${col(C[S.lvl].regola)}</div>`:''}
+  <div class="actions" style="justify-content:center">
+   ${next?`<button class="btn" data-a="go" data-id="${next.id}">Livello successivo: ${next.t}</button>`:''}
+   <button class="btn ghost" data-a="go" data-id="${S.lvl}">Rigioca</button>
+   <button class="btn ghost" data-a="home">Mappa dei livelli</button>
+  </div></div>`;
+}
+function render(){
+ document.documentElement.classList.toggle('big',S.big);
+ const app=document.getElementById('app');
+ if(S.screen==='home'){app.innerHTML=home();return}
+ let body='';
+ if(S.stage==='lab')body=labView();else if(S.stage==='build')body=buildView();else if(S.stage==='fill')body=fillView();else if(S.stage==='quiz')body=quizView();else body=endView();
+ app.innerHTML=topbar()+levelHead()+body;
+}
+
+/* ---------- azioni ---------- */
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a;
+ if(a==='home'){S.screen='home';S.confirmReset=false;render();window.scrollTo(0,0)}
+ else if(a==='go')startLevel(b.dataset.id);
+ else if(a==='big'){S.big=!S.big;save();render()}
+ else if(a==='reset'){S.confirmReset=true;render()}
+ else if(a==='reset0'){S.confirmReset=false;render()}
+ else if(a==='reset2'){S.done={};S.confirmReset=false;save();render()}
+ else if(a==='speak')speak();
+ else if(a==='tog'){S.lab[b.dataset.v]^=1;const c=C[S.lvl];S.lab.seen[key(S.lvl,c.two?[S.lab.p,S.lab.q]:[S.lab.p])]=1;render();focusSel(`[data-v="${b.dataset.v}"]`)}
+ else if(a==='labans'){const n=+b.dataset.n;if(n===C[S.lvl].uni)S.labAsk='ok';else{S.labAsk=n;S.err++}render()}
+ else if(a==='tofill'){startFill();window.scrollTo(0,0)}
+ else if(a==='cell'){const i=+b.dataset.i;S.fill[i]=S.fill[i]===null?0:1-S.fill[i];S.bad=S.bad.filter(x=>x!==i);render();focusSel(`[data-a="cell"][data-i="${i}"]`)}
+ else if(a==='check'){const rows=rowsFor(S.lvl);S.bad=rows.map((r,i)=>S.fill[i]===res(S.lvl,r)?-1:i).filter(i=>i>=0);if(S.bad.length)S.err++;else S.fillOk=true;render()}
+ else if(a==='hint'){S.showHint=true;render()}
+ else if(a==='bcell'){const i=+b.dataset.i,c=S.vals[S.ci];c[i]=c[i]===null?0:1-c[i];S.bad=S.bad.filter(x=>x!==i);render();focusSel(`[data-a="bcell"][data-i="${i}"]`)}
+ else if(a==='bcheck'){const R=getRound(S.rounds[S.ri]),rows=S.lvl==='tab2'?ROWS2:ROWS3,c=R.cols[S.ci];
+  S.bad=rows.map((o,i)=>S.vals[S.ci][i]===c.f(o)?-1:i).filter(i=>i>=0);
+  if(S.bad.length)S.err++;else{S.showHint=false;if(S.ci<R.cols.length-1)S.ci++;else S.roundOk=true}
+  render()}
+ else if(a==='bnext'){if(S.ri+1<S.rounds.length){S.ri++;startRound()}else finish()}
+ else if(a==='toquiz'){startQuiz();window.scrollTo(0,0)}
+ else if(a==='pick'){const q=S.qs[S.qi],i=+b.dataset.i;
+  if(q.opts[i].v===q.ans){S.answered=i;if(q.follow){S.qs.splice(S.qi+1,0,q.follow);q.follow=null}}
+  else{S.wrong.push(i);S.err++}
+  render()}
+ else if(a==='next'){if(S.qi+1<S.qs.length){S.qi++;S.answered=null;S.wrong=[];S.showHint=false;render();window.scrollTo(0,0)}else finish()}
+});
+function focusSel(sel){const el=document.querySelector(sel);if(el)el.focus()}
+function speak(){
+ try{const el=document.querySelector('[data-read]');if(!el)return;speechSynthesis.cancel();
+  const txt=el.innerText.replace(/\bp\b/g,'pi').replace(/\bq\b/g,'cu').replace(/\br\b/g,'erre');
+  const u=new SpeechSynthesisUtterance(txt);u.lang='it-IT';u.rate=.9;speechSynthesis.speak(u)}catch(e){}
+}
+
+function start(data){
+ const saved=store.get();
+ S=Object.assign({screen:'home',done:saved.done||{},big:!!saved.big,confirmReset:false},data&&data.S?data.S:{});
+ render();
+}
+window.claude?.hot?.snapshot?.(()=>({S}));
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+})();
+</script>
+</body>
+</html>
